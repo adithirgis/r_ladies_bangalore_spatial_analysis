@@ -1,22 +1,20 @@
 ---
-title: "Introduction to Spatial Data Analysis in R"
-subtitle: "useR! 2022"
-author: "Adithi Upadhya, Meenakshi Kushwaha"
-institute: "ILK Labs"
-date: "20th June 2022 (updated: `r Sys.Date()`)"
+title: "Introduction to spatial data analysis in R"
+subtitle: "R-Ladies Bangalore"
+author: "Adithi Upadhya"
+date: "3rd July 2022"
 output:
   html_document:
     code_folding: hide
 ---
 
-### Load Libraries  
+### Load libraries  
 
 
 ```{r, message = FALSE, warning = FALSE}
 library(sf)
 library(raster)
 library(tidyverse)
-library(stars)
 library(leaflet)
 library(ggplot2)
 library(ggspatial)
@@ -125,33 +123,6 @@ data_sf_buffer <- st_buffer(data_sf_subset, dist = 12000)
 masked_raster <- mask(x = temp, mask = data_sf_buffer)
 ```
 
-
-### Calculate area
-
-```{r, message = FALSE, warning = FALSE}
-sum(getValues(area(temp_proj)))
-```
-
-
-### Rasterize
-
-```{r, message = FALSE, warning = FALSE}
-raster_data <- st_rasterize(data_sf)
-class(raster_data)
-plot(raster_data)
-```
-
-
-### Vectorize 
- 
-```{r, message = FALSE, warning = FALSE}
-tif <- read_stars("data/Ban_Temp_Mar2022.tif")
-class(tif)
-# Convert a foreign object to sf
-temp_sf <- st_as_sf(tif, as_points = TRUE)
-class(temp_sf)
-plot(temp_sf)
-```
 
 ### Static Map
 

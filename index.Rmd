@@ -1,9 +1,8 @@
 ---
-title: "Introduction to Spatial Data Analysis in R"
-subtitle: "useR! 2022"
-author: "Adithi R Upadhya, Meenakshi Kushwaha, and Pratyush Agrawal"
-institute: "ILK Labs"
-date: "20th June 2022"
+title: "Introduction to spatial data analysis in R"
+subtitle: "R Ladies Bangalore"
+author: "Adithi R Upadhya"
+date: "3rd July 2022"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -16,9 +15,9 @@ class:middle, center
 
 # Hi, Logistics alert
 
-## [GitHub](https://github.com/adithirgis/user_2022_tutorial)
-## [Slides](https://user2022tutorial.netlify.app/)
-## [Read Me / Notes / Questions](https://docs.google.com/document/d/1OZUgLioKxihOVatHHnrFTNQn5ySHwKEfYhZGZuHxf9w/edit#heading=h.inqydmvlzlfh) 
+## [GitHub](https://github.com/adithirgis/r_ladies_bangalore_spatial_analysis)
+## [Slides](https://rladies-bangalore-spatial-analysis.netlify.app/)
+## [Read Me / Notes / Questions](https://docs.google.com/document/d/1_ZK-YTNfnc2LyUnFPkjDljmlYrloW4drF69Uz_uWzA0/edit) 
 
 ### We will start in 5 minutes.
 
@@ -243,7 +242,6 @@ background-size: contain
 #R packages
 ###sf
 ###raster
-###stars
 
 ---
 
@@ -278,25 +276,6 @@ Use the sf package for simpler spatial data analysis with geometries that stick 
 
 ---
 
-# Geometry types
-
-`POINT`: a single point
-
-`MULTIPOINT`: multiple points
-
-`LINESTRING`: sequence of two or more points connected by straight lines
-
-`MULTILINESTRING`: multiple lines
-
-`POLYGON`: a closed ring with zero or more interior holes
-
-`MULTIPOLYGON`: multiple polygons
-
-`GEOMETRYCOLLECTION`: any combination of the above types
-
-
----
-
 # Advantages of `sf`
 
 Is treated as a `data.frame` 
@@ -313,7 +292,6 @@ Can be linked directly to the `GDAL`, `GEOS`, and `PROJ` libraries that provide 
 library(sf)
 library(raster)
 library(tidyverse)
-library(stars)
 library(leaflet)
 library(ggplot2)
 library(ggspatial)
@@ -488,15 +466,6 @@ st_distance(data_sf_projected[c(1), ], data_sf_projected[c(5), ])
 
 ---
 
-# `st_area`
-
-Returns the area of a geometry, in the coordinate reference system used; in case x is in degrees longitude/latitude, `st_geod_area` is used for area calculation.
-
-Here we will use projected data to calculate area. 
-
-
----
-
 class: inverse, center, middle
 background-image: url(https://cdn.dribbble.com/users/1002383/screenshots/4252960/v13.gif)
 background-size: contain
@@ -664,7 +633,6 @@ You can change these settings by providing additional arguments such as `xmn`, `
 ```{r message = FALSE, warning = FALSE, cache = TRUE}
 temp <- raster("data/Ban_Temp_Mar2022.tif")
 
-y <- raster(ncol = 36, nrow = 18, xmn = -1000, xmx = 1000, ymn = -100, ymx = 900)
 ```
 
 ---
@@ -677,16 +645,12 @@ class:middle, center
 
 # Summary and Resolution
 
-`aggregate` - aggregates a Raster object to create a new RasterLayer or RasterBrick with a lower resolution (larger cells). 
-
 ```{r message = FALSE, warning = FALSE, cache = TRUE}
 res(temp)
 summary(temp)
 temp_agg <- aggregate(temp, 2)
 res(temp_agg)
 
-res(y)
-summary(y)
 ```
 
 ---
@@ -696,14 +660,9 @@ summary(y)
 To transform a `RasterLayer` to another coordinate reference system (projection)
 
 ```{r message = FALSE, warning = FALSE, cache = TRUE}
-# To transform 
+
 temp_proj <- projectRaster(temp, crs = "+proj=utm +zone=43 +datum=WGS84")
 
-# To set the coordinate system 
-projection(y) <- "+proj=utm +zone=48 +datum=WGS84"
-y
-# To transform
-y_prof <- projectRaster(y, crs = "+proj=longlat +datum=WGS84 +no_defs")
 ```
 
 
@@ -722,21 +681,6 @@ Use `cellStats` to obtain a summary for all cells of a single raster object.
 ```{r message = FALSE, warning = FALSE, cache = TRUE}
 cellStats(temp, mean)
 ```
-
----
-
-# Raster algebra 
-
-When used with a raster object as first argument, normal summary statistics functions such as `min`, `max`, and `mean` return a `RasterLayer` (usually for multiple layers). 
-
-```{r message = FALSE, warning = FALSE, cache = TRUE}
-r1 <- temp
-r2 <- r1
-
-s <- stack(r1, r2)
-plot(max(s, na.rm = TRUE))
-```
-
 
 ---
 
@@ -759,61 +703,6 @@ data_sf_subset <- data_sf[1, ]
 
 data_sf_buffer <- st_buffer(data_sf_subset, dist = 5000) 
 masked_raster <- mask(x = temp, mask = data_sf_buffer)
-```
-
----
-
-class:middle, center
-
-# Demo
-
----
-
-# Raster operation 
-
-Returns a geographic subset of an object as specified by an Extent object (or object from which an extent object can be extracted/created)
-
----
-# Calculate area
-
-- Computes the approximate surface area of cells in an unprojected (longitude/latitude) `raster` object
-- returns all values or the values for a number of rows of a `raster` object. Values returned for a `RasterLayer` are a vector
-
-```{r message = FALSE, warning = FALSE}
-sum(getValues(area(temp_proj)))
-```
-
----
-
-class: middle, center
-
-# Demo
-
----
-
-
-# Rasterize using `stars` package
-
-```{r message = FALSE, warning = FALSE, cache = TRUE}
-raster_data <- st_rasterize(data_sf)
-```
-
----
-
-class:middle, center
-
-# Demo
-
----
-
-# Vectorize using `stars` 
- 
-```{r, eval = FALSE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE}
-tif <- read_stars("data/Ban_Temp_Mar2022.tif")
-summary(tif)
-class(tif)
-# Convert a foreign object to sf
-temp_sf <- st_as_sf(tif, as_points = TRUE)
 ```
 
 ---
@@ -886,16 +775,6 @@ class:middle, center
 
 ---
 
-# Sometimes.. 
-
-- Making maps in R is not always easy.
-- It is slow.
-- Map transformations can be a problem. 
-- Adding annotations can be tedious. 
-
-
----
-
 # Resources used
 
 https://bookdown.org/nicohahn/making_maps_with_r5/docs/ggplot2.html#using-ggplot2-to-create-maps
@@ -924,13 +803,7 @@ Images from [rawpixel](https://www.rawpixel.com/)
 
 
 - [Adithi R Upadhya](https://adithirugis.rbind.io/)
-- [Meenakshi Kushwaha](https://meenakshi.rbind.io/) 
-- [Pratyush Agrawal](https://twitter.com/Pratyushagraw97) 
 
----
-class:middle, center
-
-# Excersise - 20 minutes
 
 ---
 class:middle, center
